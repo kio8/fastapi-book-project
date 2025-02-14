@@ -15,6 +15,7 @@ COPY . /app
 
 # Expose the port that FastAPI will run on
 EXPOSE 8000
-#
+#nginx
+#abcd
 # Set the entry point to start the FastAPI app using Uvicorn
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
