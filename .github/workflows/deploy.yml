@@ -50,7 +50,23 @@ jobs:
           username: ubuntu
           key: ${{ secrets.AWS_SSH_KEY }}
           script: |
+            # Install Docker if it's not already installed
+            sudo apt-get update
+            sudo apt-get install -y docker.io
+
+            # Ensure Docker service is running
+            sudo systemctl start docker
+            sudo systemctl enable docker
+
+            # Add the current user to the Docker group (avoiding sudo requirement)
+            sudo usermod -aG docker $USER
+
+            # Pull the Docker image
             docker pull ${{ secrets.DOCKER_USERNAME }}/fastapi-app:latest
+
+            # Stop and remove any existing container
             docker stop fastapi-container || true
             docker rm fastapi-container || true
+
+            # Run the container
             docker run -d --name fastapi-container -p 80:8000 ${{ secrets.DOCKER_USERNAME }}/fastapi-app:latest
