@@ -31,27 +31,26 @@ jobs:
           docker tag fastapi-app ${{ secrets.DOCKER_USERNAME }}/fastapi-app:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/fastapi-app:latest
 
-      - name: Setup SSH
+      - name: Setup SSH Key for Debugging
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          echo "Host *" >> ~/.ssh/config
-          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
-          echo "  UserKnownHostsFile=/dev/null" >> ~/.ssh/config
+          ssh-keyscan ${{ secrets.AWS_HOST }} >> ~/.ssh/known_hosts
 
       - name: Debug SSH Connection 🔍
         run: |
-          echo "AWS Host: ${{ secrets.AWS_HOST }}"
-          echo "${{ secrets.AWS_SSH_KEY }}" > private_key.pem
-          chmod 600 private_key.pem
-          ssh -v -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.AWS_HOST }}
+          echo "Attempting to SSH into AWS..."
+          ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.AWS_HOST }} "echo 'SSH Connection Successful'"
 
       - name: SSH into AWS and deploy 🚀
-        run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.AWS_HOST }} << 'EOF'
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ubuntu
+          key: ${{ secrets.AWS_SSH_KEY }}
+          script: |
             docker pull ${{ secrets.DOCKER_USERNAME }}/fastapi-app:latest
             docker stop fastapi-container || true
             docker rm fastapi-container || true
             docker run -d --name fastapi-container -p 80:8000 ${{ secrets.DOCKER_USERNAME }}/fastapi-app:latest
-          EOF
