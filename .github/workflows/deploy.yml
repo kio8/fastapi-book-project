@@ -41,7 +41,7 @@ jobs:
       - name: Debug SSH Connection 🔍
         run: |
           echo "Attempting to SSH into AWS..."
-          ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.AWS_HOST }} "echo 'SSH Connection Successful'"
+          ssh -v -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.AWS_HOST }} "echo 'SSH Connection Successful'"
 
       - name: SSH into AWS and deploy 🚀
         uses: appleboy/ssh-action@v0.1.5
